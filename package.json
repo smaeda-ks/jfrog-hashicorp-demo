@@ -1,5 +1,5 @@
 {
-  "name": "node-js-hellp-hashicorp",
+  "name": "node-js-hello-hashicorp",
   "version": "0.1.0",
   "description": "A sample Node.js app",
   "engines": {
