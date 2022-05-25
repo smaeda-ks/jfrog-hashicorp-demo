@@ -1,0 +1,29 @@
+{
+  "name": "node-js-hellp-hashicorp",
+  "version": "0.1.0",
+  "description": "A sample Node.js app",
+  "engines": {
+    "node": "16.x"
+  },
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"test commnad is not implemented\" && exit 0"
+  },
+  "dependencies": {
+    "ejs": "^3.1.6",
+    "express": "^4.17.3"
+  },
+  "keywords": [
+    "node",
+    "express"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "nodemon": "^2.0.16"
+  },
+  "nodemonConfig": {
+    "ext": "js,ejs",
+    "delay": 2500
+  }
+}

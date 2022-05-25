@@ -1,0 +1,25 @@
+name: Stop and Purge ephemeral Nomad jobs
+on:
+  pull_request:
+    types: [ closed ]
+
+jobs:
+  stop:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Stop job
+        run: |
+          # install Nomad
+          NOMAD_DL_URL=$(curl -s https://api.releases.hashicorp.com/v1/releases/nomad/latest | jq -r '.builds[] | select((.arch=="amd64") and (.os=="linux")).url')
+          ZIP_NAME="nomad_linux_amd64.zip"
+          mkdir -p ${HOME}/.local/bin
+          curl -sL -o ${ZIP_NAME} ${NOMAD_DL_URL}
+          unzip -qq ${ZIP_NAME} -d ${HOME}/.local/bin
+          echo "${HOME}/.local/bin" >> $GITHUB_PATH
+          
+          # stop Nomad job
+          export NOMAD_ADDR=${{ secrets.NOMAD_ADDR }}
+          export NOMAD_TOKEN=${{ secrets.NOMAD_TOKEN }}
+
+          nomad job status
+          nomad job stop -purge -no-shutdown-delay -yes -detach staging-${{github.event.number}}

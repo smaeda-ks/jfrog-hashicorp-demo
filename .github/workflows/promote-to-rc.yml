@@ -1,0 +1,33 @@
+name: Promote staging image to RC repo
+on:
+  pull_request:
+    branches:
+      - main
+    types: [ closed ]
+
+jobs:
+  promote:
+    # only trigger on PR "merged", not "closed"
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+
+      - name: Create .env file
+        run: |
+          cat ./actions.env >> $GITHUB_ENV
+
+      - uses: jfrog/setup-jfrog-cli@v2
+      - name: Xray scan
+        run: |
+          # init connection
+          jf config add jfrog-demo \
+            --url="https://${{ env.JFROG_URL }}" \
+            --user="${{ secrets.JFROG_USER_NAME }}" \
+            --password="${{ secrets.JFROG_API_KEY }}"
+
+          # Promote to RC repo
+          jf rt docker-promote ${{ env.DOCKER_IMAGE_NAME }} \
+            ${{ env.JFROG_REPO_STAGING }} ${{ env.JFROG_REPO_RC }} \
+            --copy --source-tag "pr-${{github.event.number}}" --target-tag "latest"

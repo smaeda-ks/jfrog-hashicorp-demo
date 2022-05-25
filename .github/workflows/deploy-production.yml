@@ -1,0 +1,62 @@
+name: Deploy to production
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  promote:
+    # first, we need to pick the most rencet RC image and promote it to production repo
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+
+      - name: Create .env file
+        run: |
+          cat ./actions.env >> $GITHUB_ENV
+
+      - uses: jfrog/setup-jfrog-cli@v2
+      - name: Xray scan
+        run: |
+          # init connection
+          jf config add jfrog-demo \
+            --url="https://${{ env.JFROG_URL }}" \
+            --user="${{ secrets.JFROG_USER_NAME }}" \
+            --password="${{ secrets.JFROG_API_KEY }}"
+
+          # Promote to production repo
+          jf rt docker-promote ${{ env.DOCKER_IMAGE_NAME }} \
+            ${{ env.JFROG_REPO_RC }} ${{ env.JFROG_REPO_PRODUCTION }} \
+            --copy --source-tag "latest" --target-tag "${GITHUB_REF#refs/tags/}"
+
+  deploy:
+    needs: promote
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+
+      - name: Create .env file
+        run: |
+          cat ./actions.env >> $GITHUB_ENV
+
+      - name: Deploy to production
+        run: |
+          # install Nomad
+          NOMAD_DL_URL=$(curl -s https://api.releases.hashicorp.com/v1/releases/nomad/latest | jq -r '.builds[] | select((.arch=="amd64") and (.os=="linux")).url')
+          ZIP_NAME="nomad_linux_amd64.zip"
+          mkdir -p ${HOME}/.local/bin
+          curl -sL -o ${ZIP_NAME} ${NOMAD_DL_URL}
+          unzip -qq ${ZIP_NAME} -d ${HOME}/.local/bin
+          echo "${HOME}/.local/bin" >> $GITHUB_PATH
+          
+          # deploy Nomad job
+          export NOMAD_ADDR=${{ secrets.NOMAD_ADDR }}
+          export NOMAD_TOKEN=${{ secrets.NOMAD_TOKEN }}
+
+          nomad job run -detach \
+            -var="jfrog_user_name=${{ secrets.JFROG_USER_NAME }}" \
+            -var="jfrog_api_key=${{ secrets.JFROG_API_KEY }}" \
+            -var="docker_image_path=${{ env.JFROG_URL }}/${{ env.JFROG_REPO_PRODUCTION }}/${{ env.DOCKER_IMAGE_NAME }}:${GITHUB_REF#refs/tags/}" \
+            ./nomad/jobs/production.nomad
