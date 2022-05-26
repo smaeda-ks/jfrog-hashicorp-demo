@@ -33,7 +33,9 @@ job "nginx" {
         data = <<EOF
 upstream production {
   {{- range nomadService "production" }}
-  server host.docker.internal:{{ .Port }};{{- end }}
+  server host.docker.internal:{{ .Port }};
+  {{- else }}
+  server 127.0.0.1:65535; # force a 502{{ end }}
 }
 
 {{ range nomadServices -}}
