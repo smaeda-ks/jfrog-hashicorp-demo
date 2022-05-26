@@ -115,6 +115,7 @@ jobs:
           export NOMAD_TOKEN=${{ secrets.NOMAD_TOKEN }}
 
           nomad job run -detach \
+            -var="git_hash=${GITHUB_SHA}" \
             -var="jfrog_user_name=${{ secrets.JFROG_USER_NAME }}" \
             -var="jfrog_api_key=${{ secrets.JFROG_API_KEY }}" \
             -var="docker_image_path=${{ env.JFROG_URL }}/${{ env.JFROG_REPO_STAGING }}/${{ needs.build.outputs.tags }}" \

@@ -11,6 +11,13 @@ variable "docker_image_path" {
   type = string
 }
 
+# NOTE: this has nothing to do other than making sure that
+# every new push to the PR will launch a fresh job
+# even if there are no changes in the job definition.
+variable "git_hash" {
+  type = string
+}
+
 # GitHub Actions will replace placeholders accordingly
 job "####JOB_IDENTIFIER_PLACEHOLDER####" {
   datacenters = ["dc1"]
@@ -35,6 +42,7 @@ job "####JOB_IDENTIFIER_PLACEHOLDER####" {
 
       env {
         PORT = "${NOMAD_PORT_http}"
+        GIT_HASH = var.git_hash
       }
 
       config {
