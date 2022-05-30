@@ -15,7 +15,7 @@ This example repository showcases simple CI/CD workflows to automate containeriz
 
 # Setup
 
-## Prerequisite
+## Prerequisites
 
 - You have a valid JFrog SaaS account (A free trial acount should be sufficient).
 - You have a [ngrok](https://ngrok.com/) account and can run it on your local machine.
@@ -26,6 +26,8 @@ This example repository showcases simple CI/CD workflows to automate containeriz
 ### 1. Run Nomad on your local machine (dev mode)
 
 [Download](https://www.nomadproject.io/downloads) the Nomad binary that works for your platform and run the following command:
+
+> **NOTE**: Requires Nomad version 1.3+ since this demo uses the native service discovery feature added in 1.3.
 
 ```
 nomad agent -dev -acl-enabled -bind=0.0.0.0
